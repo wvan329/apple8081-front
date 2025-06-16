@@ -1,0 +1,41 @@
+name: Frontend Deploy
+
+# 当 main 分支有 push 时触发
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    # 只有当 commit message 以 "yes" 开头时才运行整个 job
+    if: startsWith(github.event.head_commit.message, 'yes')
+
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: 拉取代码
+      - uses: actions/checkout@v4
+
+      # Step 2: 安装 Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      # Step 3: 安装依赖
+      - name: Install Dependencies
+        run: npm install
+
+      # Step 4: 构建项目
+      - name: Build Project
+        run: npm run build
+
+      # Step 5: 部署到服务器
+      - name: Deploy to Server via SSH
+        uses: easingthemes/ssh-deploy@main
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.SERVER_HOST }}
+          REMOTE_USER: root
+          SOURCE: 'dist/'
+          TARGET: /var/lib/docker/volumes/nginx-html/_data/apple8081
